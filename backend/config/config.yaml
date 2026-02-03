@@ -23,4 +23,4 @@ jwt:
 log:
   level: "info"        # debug, info, warn, error
   format: "console"    # json, console
-  output_path: "stdout" # stdout, stderr, 或文件路径
+  output_path: "../logs/app.log" # stdout, stderr, 或文件路径

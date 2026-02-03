@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -76,6 +77,11 @@ func initLogger(cfg *Config) error {
 	case "stderr":
 		writeSyncer = zapcore.AddSync(os.Stderr)
 	default:
+		// 确保日志目录存在
+		logDir := filepath.Dir(outputPath)
+		if err := os.MkdirAll(logDir, 0755); err != nil {
+			return err
+		}
 		file, err := os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			return err

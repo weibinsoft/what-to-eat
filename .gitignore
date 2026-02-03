@@ -1,7 +1,9 @@
 # Backend
 backend/what-to-eat
 backend.log
-*.log
+
+# Logs
+logs/*.log
 
 # Frontend
 frontend/node_modules/
