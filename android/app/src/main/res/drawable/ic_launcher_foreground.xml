@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:translateX="10.8"
+        android:translateY="10.8">
+        <!-- 碗 -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,30 
+                C30,30 20,45 20,55 
+                C20,70 35,85 54,85 
+                C73,85 88,70 88,55 
+                C88,45 78,30 54,30 Z"/>
+        <!-- 筷子 -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:pathData="M40,20 L48,50"/>
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:pathData="M68,20 L60,50"/>
+        <!-- 面条 -->
+        <path
+            android:strokeColor="#FFD54F"
+            android:strokeWidth="2"
+            android:pathData="M35,50 Q40,60 50,55 Q60,50 65,60"/>
+        <path
+            android:strokeColor="#FFD54F"
+            android:strokeWidth="2"
+            android:pathData="M40,55 Q50,65 60,58 Q70,52 72,62"/>
+    </group>
+</vector>

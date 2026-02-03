@@ -15,7 +15,8 @@
 
 | 层级 | 技术 |
 |------|------|
-| **前端** | Vue 3 + TypeScript + Vite + Pinia + Vue Router |
+| **Web 前端** | Vue 3 + TypeScript + Vite + Pinia + Vue Router |
+| **Android** | Kotlin + Jetpack Compose + Hilt + Retrofit |
 | **后端** | Go 1.21+ + Gin + GORM + Zap日志 |
 | **数据库** | MySQL 8.0 |
 | **部署** | Docker Compose |
@@ -138,12 +139,32 @@ npm run dev
                     └─────────────┘
 ```
 
+## Android 客户端
+
+详细说明请查看 [android/README.md](android/README.md)
+
+### 快速开始
+
+1. 使用 Android Studio 打开 `android` 目录
+2. 在设置页配置服务器地址：
+   - 模拟器: `http://10.0.2.2:8080`
+   - 真机: `http://<电脑IP>:8080`
+3. 构建并运行
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
 ## 项目结构
 
 ```
 .
 ├── start.sh                 # 一键启动脚本
 ├── docker-compose.yml       # Docker Compose 配置
+├── android/                 # Android 客户端 (Kotlin + Jetpack Compose)
+│   ├── app/src/main/java/   # Kotlin 源码
+│   └── README.md            # Android 文档
 ├── frontend/                # Vue 3 前端
 │   ├── src/
 │   │   ├── api/            # API 请求封装
