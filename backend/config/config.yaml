@@ -1,0 +1,26 @@
+# 服务器配置
+server:
+  port: "8080"
+  mode: "debug"  # debug, release, test
+
+# 数据库配置 (Docker MySQL 8.0)
+database:
+  host: "127.0.0.1"
+  port: "3306"
+  user: "root"
+  password: "root123456"
+  dbname: "what_to_eat"
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600  # 秒
+
+# JWT 配置
+jwt:
+  secret: "your-secret-key-change-in-production"
+  expire_time: 24  # 小时
+
+# 日志配置
+log:
+  level: "info"        # debug, info, warn, error
+  format: "console"    # json, console
+  output_path: "stdout" # stdout, stderr, 或文件路径

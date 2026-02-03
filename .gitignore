@@ -1,0 +1,26 @@
+# Backend
+backend/what-to-eat
+backend.log
+*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env.local
+.env.*.local
+
+# Docker volumes
+mysql_data/
+backend/server
