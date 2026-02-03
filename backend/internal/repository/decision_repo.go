@@ -69,13 +69,16 @@ func (r *DecisionRepository) GetRecentByUserID(userID int64, limit int) ([]model
 	return records, err
 }
 
-// GetByUserIDAndDays 获取用户最近N天的决策记录（每天一条）
+// GetByUserIDAndDays 获取用户最近N天的决策记录（包含已删除的菜单）
 func (r *DecisionRepository) GetByUserIDAndDays(userID int64, days int) ([]model.DecisionRecord, error) {
 	var records []model.DecisionRecord
 	startTime := time.Now().AddDate(0, 0, -days)
+	// 使用 Unscoped 加载已软删除的菜单，确保历史记录完整显示
 	err := r.db.Where("user_id = ? AND decided_at >= ?", userID, startTime).
 		Order("decided_at DESC").
-		Preload("Menu").
+		Preload("Menu", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped() // 包含已删除的菜单
+		}).
 		Preload("Menu.Restaurant").
 		Find(&records).Error
 	return records, err

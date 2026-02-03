@@ -30,14 +30,16 @@ CREATE TABLE IF NOT EXISTS restaurants (
     updated_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='餐厅表';
 
--- 菜单表（菜品）
+-- 菜单表（菜品）- 支持软删除
 CREATE TABLE IF NOT EXISTS menus (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     restaurant_id BIGINT NOT NULL COMMENT '所属餐厅ID',
     dish_name VARCHAR(100) NOT NULL COMMENT '菜品名称',
     created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
     updated_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-    INDEX idx_restaurant (restaurant_id)
+    deleted_at DATETIME(3) NULL COMMENT '软删除时间',
+    INDEX idx_restaurant (restaurant_id),
+    INDEX idx_deleted_at (deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单表';
 
 -- 决策记录表
