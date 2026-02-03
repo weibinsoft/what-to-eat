@@ -26,3 +26,4 @@ Thumbs.db
 # Docker volumes
 mysql_data/
 backend/server
+.backend.pid
