@@ -63,21 +63,6 @@ fun LoginScreen(
                 )
             )
     ) {
-        // 设置按钮
-        IconButton(
-            onClick = onNavigateToSettings,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .statusBarsPadding()
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "设置",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -209,6 +194,23 @@ fun LoginScreen(
                     }
                 }
             }
+        }
+
+        // 设置按钮 - 放在最后确保在最上层
+        IconButton(
+            onClick = onNavigateToSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .statusBarsPadding()
+                .size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "设置",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(28.dp)
+            )
         }
 
         // 错误提示
