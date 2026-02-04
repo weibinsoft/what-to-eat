@@ -6,6 +6,10 @@ import retrofit2.http.*
 
 interface ApiService {
 
+    // 健康检查
+    @GET("health")
+    suspend fun health(): Response<HealthResponse>
+
     // 认证
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<ApiResponse<User>>

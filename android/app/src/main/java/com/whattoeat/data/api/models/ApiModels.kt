@@ -9,6 +9,11 @@ data class ApiResponse<T>(
     val data: T?
 )
 
+// 健康检查响应
+data class HealthResponse(
+    val status: String
+)
+
 // 用户
 data class User(
     val id: Long,
