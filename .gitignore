@@ -27,3 +27,5 @@ Thumbs.db
 mysql_data/
 backend/server
 .backend.pid
+*.apk
+android/local.properties
