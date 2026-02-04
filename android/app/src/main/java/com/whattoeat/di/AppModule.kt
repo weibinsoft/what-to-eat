@@ -41,7 +41,11 @@ object AppModule {
 
         // 认证拦截器
         val authInterceptor = Interceptor { chain ->
-            val token = runBlocking { settingsDataStore.getToken() }
+            val token = try {
+                runBlocking { settingsDataStore.getToken() }
+            } catch (e: Exception) {
+                null
+            }
             val request = if (token != null) {
                 chain.request().newBuilder()
                     .addHeader("Authorization", "Bearer $token")
@@ -55,7 +59,11 @@ object AppModule {
         // 动态 BaseUrl 拦截器
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             val originalRequest = chain.request()
-            val currentHost = runBlocking { settingsDataStore.getServerHost() }
+            val currentHost = try {
+                runBlocking { settingsDataStore.getServerHost() }
+            } catch (e: Exception) {
+                SettingsDataStore.DEFAULT_SERVER_HOST
+            }
             
             // 解析新的 baseUrl
             val newBaseUrl = currentHost.toHttpUrlOrNull()

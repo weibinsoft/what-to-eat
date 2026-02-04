@@ -48,28 +48,35 @@ class HomeViewModel @Inject constructor(
 
     fun loadData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // 并行加载数据
-            val menusResult = repository.getMenus()
-            val restaurantsResult = repository.getRestaurants()
-            val historyResult = repository.getHistory()
+                // 并行加载数据
+                val menusResult = repository.getMenus()
+                val restaurantsResult = repository.getRestaurants()
+                val historyResult = repository.getHistory()
 
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                menus = when (menusResult) {
-                    is Result.Success -> menusResult.data
-                    is Result.Error -> emptyList()
-                },
-                restaurants = when (restaurantsResult) {
-                    is Result.Success -> restaurantsResult.data
-                    is Result.Error -> emptyList()
-                },
-                historyRecords = when (historyResult) {
-                    is Result.Success -> historyResult.data.records
-                    is Result.Error -> emptyList()
-                }
-            )
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    menus = when (menusResult) {
+                        is Result.Success -> menusResult.data
+                        is Result.Error -> emptyList()
+                    },
+                    restaurants = when (restaurantsResult) {
+                        is Result.Success -> restaurantsResult.data
+                        is Result.Error -> emptyList()
+                    },
+                    historyRecords = when (historyResult) {
+                        is Result.Success -> historyResult.data.records
+                        is Result.Error -> emptyList()
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "加载数据失败: ${e.message}"
+                )
+            }
         }
     }
 

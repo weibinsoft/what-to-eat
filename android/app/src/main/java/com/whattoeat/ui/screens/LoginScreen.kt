@@ -40,10 +40,12 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isRegisterMode by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var hasNavigated by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
+        if (uiState.isSuccess && !hasNavigated) {
+            hasNavigated = true
             onLoginSuccess()
         }
     }
