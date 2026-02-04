@@ -1,6 +1,7 @@
 package com.whattoeat.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,6 +34,11 @@ fun WhatToEatNavHost() {
         composable(Screen.Splash.route) {
             val authViewModel: AuthViewModel = hiltViewModel()
             val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+
+            // 启动时自动进行游客登录
+            LaunchedEffect(Unit) {
+                authViewModel.autoGuestLogin()
+            }
 
             SplashScreen(
                 onNavigateToLogin = {

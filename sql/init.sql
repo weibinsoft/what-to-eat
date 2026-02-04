@@ -55,6 +55,12 @@ CREATE TABLE IF NOT EXISTS decision_records (
 -- 默认数据（可选，后端启动时会自动初始化）
 -- ============================================================================
 
+-- 插入游客用户（id=1）
+-- 密码哈希为 "guest123" 使用 bcrypt 生成
+INSERT INTO users (id, username, password_hash, created_at, updated_at) 
+VALUES (1, 'guest', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NOW(3), NOW(3))
+ON DUPLICATE KEY UPDATE username = username;
+
 -- 插入默认餐厅
 INSERT IGNORE INTO restaurants (name) VALUES 
     ('麦当劳'),

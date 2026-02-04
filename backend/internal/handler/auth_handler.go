@@ -76,3 +76,23 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, model.Success(resp))
 }
+
+// GuestLogin 游客登录
+// @Summary 游客登录
+// @Tags 认证
+// @Produce json
+// @Success 200 {object} model.Response{data=model.LoginResponse}
+// @Router /api/auth/guest [post]
+func (h *AuthHandler) GuestLogin(c *gin.Context) {
+	resp, err := h.authService.GuestLogin()
+	if err != nil {
+		if errors.Is(err, service.ErrUserNotFound) {
+			c.JSON(http.StatusInternalServerError, model.Error(500, "游客账号未初始化"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, model.Error(500, "游客登录失败"))
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(resp))
+}

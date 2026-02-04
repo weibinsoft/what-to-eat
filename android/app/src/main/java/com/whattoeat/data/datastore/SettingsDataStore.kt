@@ -27,6 +27,10 @@ class SettingsDataStore @Inject constructor(
         private val KEY_USERNAME = stringPreferencesKey("username")
 
         const val DEFAULT_SERVER_HOST = "http://10.0.2.2:8080" // Android 模拟器 localhost
+
+        // 游客用户信息
+        const val GUEST_USER_ID = 1L
+        const val GUEST_USERNAME = "guest"
     }
 
     // 服务器地址

@@ -91,6 +91,43 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    // 游客登录
+    fun guestLogin() {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState(isLoading = true)
+            when (val result = repository.guestLogin()) {
+                is Result.Success -> {
+                    _uiState.value = AuthUiState(isSuccess = true)
+                }
+                is Result.Error -> {
+                    _uiState.value = AuthUiState(error = result.message)
+                }
+            }
+        }
+    }
+
+    // 自动游客登录（用于启动时）
+    fun autoGuestLogin() {
+        viewModelScope.launch {
+            // 先检查是否已登录
+            if (settingsDataStore.isLoggedIn()) {
+                _isLoggedIn.value = true
+                return@launch
+            }
+            
+            // 未登录则自动游客登录
+            when (repository.guestLogin()) {
+                is Result.Success -> {
+                    _isLoggedIn.value = true
+                }
+                is Result.Error -> {
+                    // 游客登录失败，标记为未登录
+                    _isLoggedIn.value = false
+                }
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

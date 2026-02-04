@@ -63,6 +63,25 @@ class WhatToEatRepository @Inject constructor(
         }
     }
 
+    // 游客登录
+    suspend fun guestLogin(): Result<LoginResponse> {
+        return try {
+            val response = apiService.guestLogin()
+            if (response.isSuccessful && response.body()?.code == 0) {
+                response.body()?.data?.let { loginResponse ->
+                    // 保存登录信息
+                    settingsDataStore.setToken(loginResponse.token)
+                    settingsDataStore.setUserInfo(loginResponse.userId, loginResponse.username)
+                    Result.Success(loginResponse)
+                } ?: Result.Error("游客登录失败")
+            } else {
+                Result.Error(response.body()?.message ?: "游客登录失败")
+            }
+        } catch (e: Exception) {
+            Result.Error(getErrorMessage(e))
+        }
+    }
+
     suspend fun logout() {
         settingsDataStore.clearUserInfo()
     }

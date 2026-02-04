@@ -187,6 +187,22 @@ fun LoginScreen(
                             text = if (isRegisterMode) "已有账号？去登录" else "没有账号？去注册"
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 游客登录按钮
+                    OutlinedButton(
+                        onClick = { viewModel.guestLogin() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text(
+                            text = "游客模式",
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
         }

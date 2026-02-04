@@ -120,3 +120,26 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.MapClaims, error) 
 func (s *AuthService) GetUserByID(id int64) (*model.User, error) {
 	return s.userRepo.GetByID(id)
 }
+
+// GuestLogin 游客登录（使用预设的游客账号）
+func (s *AuthService) GuestLogin() (*model.LoginResponse, error) {
+	// 游客用户ID固定为1
+	const guestUserID int64 = 1
+
+	user, err := s.userRepo.GetByID(guestUserID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	// 生成 JWT Token
+	token, err := s.generateToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.LoginResponse{
+		Token:    token,
+		UserID:   user.ID,
+		Username: user.Username,
+	}, nil
+}

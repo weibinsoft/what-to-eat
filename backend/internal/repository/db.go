@@ -125,6 +125,11 @@ func autoMigrate() error {
 
 // initDefaultData 初始化默认数据（仅当数据库为空时执行）
 func initDefaultData() error {
+	// 先初始化游客用户
+	if err := initGuestUser(); err != nil {
+		return fmt.Errorf("failed to init guest user: %w", err)
+	}
+
 	// 检查是否已有菜单数据
 	var menuCount int64
 	if err := DB.Model(&model.Menu{}).Count(&menuCount).Error; err != nil {
@@ -228,4 +233,47 @@ func (l *zapGormLogger) Trace(ctx context.Context, begin time.Time, fc func() (s
 	}
 
 	logger.Debug("GORM SQL", fields...)
+}
+
+// ============================================================================
+// 游客用户初始化
+// ============================================================================
+
+// GuestUserID 游客用户ID
+const GuestUserID int64 = 1
+
+// GuestUsername 游客用户名
+const GuestUsername = "guest"
+
+// initGuestUser 初始化游客用户（id=1, username=guest）
+func initGuestUser() error {
+	var user model.User
+	err := DB.First(&user, GuestUserID).Error
+	if err == nil {
+		// 游客用户已存在
+		logger.Debug("Guest user already exists", zap.Int64("id", GuestUserID))
+		return nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// 创建游客用户
+	// 密码哈希为 "guest123" 使用 bcrypt 生成
+	guestUser := model.User{
+		ID:           GuestUserID,
+		Username:     GuestUsername,
+		PasswordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+	}
+
+	if err := DB.Create(&guestUser).Error; err != nil {
+		return fmt.Errorf("failed to create guest user: %w", err)
+	}
+
+	logger.Info("Guest user initialized",
+		zap.Int64("id", GuestUserID),
+		zap.String("username", GuestUsername),
+	)
+	return nil
 }

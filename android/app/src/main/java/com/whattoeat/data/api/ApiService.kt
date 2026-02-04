@@ -17,6 +17,10 @@ interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginResponse>>
 
+    // 游客登录
+    @POST("api/auth/guest")
+    suspend fun guestLogin(): Response<ApiResponse<LoginResponse>>
+
     // 菜单
     @GET("api/menus")
     suspend fun getMenus(): Response<ApiResponse<List<Menu>>>
