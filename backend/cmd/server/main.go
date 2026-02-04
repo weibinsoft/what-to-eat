@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,18 @@ import (
 	"what-to-eat/pkg/logger"
 	"what-to-eat/pkg/middleware"
 )
+
+// getLocalIP 获取本机IP地址
+func getLocalIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "127.0.0.1"
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String()
+}
 
 func main() {
 	// 加载配置
@@ -110,8 +123,26 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	logger.Info("Server starting", zap.String("port", cfg.Server.Port))
-	if err := r.Run(":" + cfg.Server.Port); err != nil {
+	// 获取本机IP
+	localIP := getLocalIP()
+	address := ":" + cfg.Server.Port
+
+	logger.Info("Server starting",
+		zap.String("port", cfg.Server.Port),
+		zap.String("local_ip", localIP),
+		zap.String("public_url", "http://"+localIP+address),
+		zap.String("health_check_url", "http://"+localIP+address+"/health"),
+	)
+
+	// 自定义启动信息
+	logger.Info("Listening and serving HTTP",
+		zap.String("address", address),
+		zap.String("local_ip", localIP),
+		zap.String("public_url", "http://"+localIP+address),
+		zap.String("health_check_url", "http://"+localIP+address+"/health"),
+	)
+
+	if err := r.Run(address); err != nil {
 		logger.Fatal("Failed to start server", zap.Error(err))
 	}
 }

@@ -28,10 +28,25 @@
 ```bash
 # 启动 MySQL
 docker-compose up -d
+# 若无docker环境,使用现有环境
+需要修改`backend/config/config.yaml`数据库配置。
+启动服务端代码数据库账号需要DDL，DML权限。
+启动后端时，初始化数据库、数据表、数据。
 
-# 启动项目
+
+
+# 启动后端项目
 chmod +x start.sh
-./start.sh
+# 启动服务端，需要Go语言环境,如果没有执行初始化Go环境脚本
+./start.sh backend
+
+# 启动成后，后端会输出日志
+`Listening and serving HTTP {"address": ":8080", "local_ip": "10.100.7.109", "public_url": "http://10.100.7.109:8080", "health_check_url": "http://10.100.7.109:8080/health"}`
+客户端设置中修改url为public_url
+
+# 初始化 Go 语言环境（首次运行需要）
+chmod +x init-go.sh
+./init-go.sh
 ```
 
 ### 方式二：一键启动脚本
@@ -49,11 +64,32 @@ chmod +x start.sh
 
 ### 方式三：手动启动
 
-#### 1. 启动后端
+#### 1. 初始化 Go 环境（首次运行）
+
+```bash
+# 在项目根目录执行
+chmod +x init-go.sh
+./init-go.sh
+```
+
+该脚本会：
+
+- 检查并安装 Go（如果未安装）
+- 配置 Go 环境变量和代理
+- 下载项目依赖
+- 验证编译环境
+
+#### 2. 启动后端
 
 ```bash
 cd backend
-go mod tidy
+go run cmd/server/main.go
+```
+
+或者如果已运行过 `init-go.sh`，可以直接：
+
+```bash
+cd backend
 go run cmd/server/main.go
 ```
 
@@ -67,7 +103,7 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173
+访问 <http://localhost:5173>
 
 ## 使用说明
 
@@ -217,6 +253,7 @@ log:
 ```
 
 支持环境变量覆盖（前缀 `APP_`）：
+
 - `APP_DATABASE_HOST`
 - `APP_DATABASE_PASSWORD`
 - `APP_JWT_SECRET`
@@ -235,6 +272,7 @@ docker-compose down
 ```
 
 MySQL 配置：
+
 - 端口: 3306
 - 用户: root / root123456
 - 数据库: what_to_eat

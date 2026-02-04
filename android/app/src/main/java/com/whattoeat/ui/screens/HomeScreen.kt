@@ -5,6 +5,7 @@ import android.media.ToneGenerator
 import androidx.compose.animation.core.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,13 @@ fun HomeScreen(
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var showAddMenuDialog by remember { mutableStateOf(false) }
     var showDecisionResultDialog by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    
+    // 用于滑动切换的状态
+    val tabState = remember { mutableStateOf(selectedTab) }
+    LaunchedEffect(selectedTab) {
+        tabState.value = selectedTab
+    }
 
     // 音效生成器
     val toneGenerator = remember {
@@ -181,25 +191,69 @@ fun HomeScreen(
                 )
             }
 
-            // 内容区域
-            when (selectedTab) {
-                0 -> DecisionTab(
-                    slotDisplayText = uiState.slotDisplayText,
-                    isDeciding = uiState.isDeciding,
-                    menuCount = uiState.menus.size,
-                    onDecide = { viewModel.decide() }
-                )
-                1 -> MenuListTab(
-                    menus = uiState.menus,
-                    isLoading = uiState.isLoading,
-                    onDelete = { viewModel.deleteMenu(it) },
-                    onRefresh = { viewModel.loadData() }
-                )
-                2 -> HistoryTab(
-                    records = uiState.historyRecords,
-                    isLoading = uiState.isLoading,
-                    onRefresh = { viewModel.loadData() }
-                )
+            // 内容区域（支持左右滑动切换）
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(tabState.value) {
+                        val threshold = with(density) { 50.dp.toPx() } // 降低阈值提高灵敏度
+                        var totalDrag = 0f
+                        var hasSwitched = false // 防止重复切换
+                        
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                // 滑动结束时，如果还没切换且超过阈值，则切换
+                                if (!hasSwitched && kotlin.math.abs(totalDrag) > threshold) {
+                                    val currentTab = tabState.value
+                                    if (totalDrag > 0 && currentTab > 0) {
+                                        // 向右滑动，切换到前一个 Tab
+                                        selectedTab = currentTab - 1
+                                    } else if (totalDrag < 0 && currentTab < 2) {
+                                        // 向左滑动，切换到后一个 Tab
+                                        selectedTab = currentTab + 1
+                                    }
+                                }
+                                totalDrag = 0f
+                                hasSwitched = false
+                            }
+                        ) { _, dragAmount ->
+                            totalDrag += dragAmount
+                            
+                            // 在滑动过程中实时检测，一旦超过阈值就切换
+                            if (!hasSwitched && kotlin.math.abs(totalDrag) > threshold) {
+                                val currentTab = tabState.value
+                                if (totalDrag > 0 && currentTab > 0) {
+                                    // 向右滑动，切换到前一个 Tab
+                                    selectedTab = currentTab - 1
+                                    hasSwitched = true
+                                } else if (totalDrag < 0 && currentTab < 2) {
+                                    // 向左滑动，切换到后一个 Tab
+                                    selectedTab = currentTab + 1
+                                    hasSwitched = true
+                                }
+                            }
+                        }
+                    }
+            ) {
+                when (selectedTab) {
+                    0 -> DecisionTab(
+                        slotDisplayText = uiState.slotDisplayText,
+                        isDeciding = uiState.isDeciding,
+                        menuCount = uiState.menus.size,
+                        onDecide = { viewModel.decide() }
+                    )
+                    1 -> MenuListTab(
+                        menus = uiState.menus,
+                        isLoading = uiState.isLoading,
+                        onDelete = { viewModel.deleteMenu(it) },
+                        onRefresh = { viewModel.loadData() }
+                    )
+                    2 -> HistoryTab(
+                        records = uiState.historyRecords,
+                        isLoading = uiState.isLoading,
+                        onRefresh = { viewModel.loadData() }
+                    )
+                }
             }
         }
     }
