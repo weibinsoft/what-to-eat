@@ -39,9 +39,9 @@ chmod +x start.sh
 # 启动服务端，需要Go语言环境,如果没有执行初始化Go环境脚本
 ./start.sh backend
 
-# 启动成后，后端会输出日志
-`Listening and serving HTTP {"address": ":8080", "local_ip": "10.100.7.109", "public_url": "http://10.100.7.109:8080", "health_check_url": "http://10.100.7.109:8080/health"}`
-客户端设置中修改url为public_url
+# 获取客户端配置HOST
+启动后端服务后，输出日志中获取public_url,客户端设置为HOST
+`json Listening and serving HTTP {"address": ":8080", "local_ip": "10.100.7.109", "public_url": "http://10.100.7.109:8080", "health_check_url": "http://10.100.7.109:8080/health"}`
 
 # 初始化 Go 语言环境（首次运行需要）
 chmod +x init-go.sh
@@ -50,7 +50,7 @@ chmod +x init-go.sh
 
 ### 方式二：一键启动脚本
 
-确保 MySQL 服务已启动，编辑 `backend/config/config.yaml` 配置数据库连接，然后：
+确保 MySQL 服务已启动，编辑 `backend/config/config.yaml` 数据库连接配置：
 
 ```bash
 ./start.sh start     # 启动后端（默认）
@@ -62,7 +62,7 @@ chmod +x init-go.sh
 
 ### 方式三：手动启动
 
-#### 1. 初始化 Go 环境（首次运行）
+#### 1. 初始化 Go 环境（本地无Go语言环境）
 
 ```bash
 # 在项目根目录执行
