@@ -172,17 +172,10 @@ fun LoginScreen(
                             .height(50.dp),
                         enabled = !uiState.isLoading
                     ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(
-                                text = if (isRegisterMode) "注册" else "登录",
-                                fontSize = 16.sp
-                            )
-                        }
+                        Text(
+                            text = if (uiState.isLoading) "处理中..." else if (isRegisterMode) "注册" else "登录",
+                            fontSize = 16.sp
+                        )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 

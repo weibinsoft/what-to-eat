@@ -1,12 +1,18 @@
 package com.whattoeat.ui.screens
 
+import android.media.AudioManager
+import android.media.ToneGenerator
 import androidx.compose.animation.core.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -27,6 +33,7 @@ import com.whattoeat.data.api.models.Menu
 import com.whattoeat.ui.theme.GradientEnd
 import com.whattoeat.ui.theme.GradientStart
 import com.whattoeat.viewmodel.HomeViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,9 +49,57 @@ fun HomeScreen(
     var showAddMenuDialog by remember { mutableStateOf(false) }
     var showDecisionResultDialog by remember { mutableStateOf(false) }
 
-    // 监听决策结果
+    // 音效生成器
+    val toneGenerator = remember {
+        try {
+            ToneGenerator(AudioManager.STREAM_MUSIC, 80)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // 清理音效资源
+    DisposableEffect(Unit) {
+        onDispose {
+            toneGenerator?.release()
+        }
+    }
+
+    // 决策过程中播放连续的滚动音效（类似老虎机）
+    LaunchedEffect(uiState.isDeciding) {
+        if (uiState.isDeciding) {
+            var tickCount = 0
+            while (uiState.isDeciding && tickCount < 40) {
+                try {
+                    // 使用 DTMF 音调模拟老虎机滚动声
+                    val tones = listOf(
+                        ToneGenerator.TONE_DTMF_1,
+                        ToneGenerator.TONE_DTMF_2,
+                        ToneGenerator.TONE_DTMF_3,
+                        ToneGenerator.TONE_DTMF_4,
+                        ToneGenerator.TONE_DTMF_5
+                    )
+                    toneGenerator?.startTone(tones[tickCount % tones.size], 50)
+                } catch (e: Exception) {
+                    // 忽略音效播放错误
+                }
+                // 逐渐减速
+                val delayMs = 80L + (tickCount * 5L)
+                delay(delayMs)
+                tickCount++
+            }
+        }
+    }
+
+    // 监听决策结果并播放成功音效
     LaunchedEffect(uiState.decisionResult) {
         if (uiState.decisionResult != null) {
+            // 播放成功音效（庆祝音）
+            try {
+                toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
+            } catch (e: Exception) {
+                // 忽略音效播放错误
+            }
             showDecisionResultDialog = true
         }
     }
@@ -270,12 +325,7 @@ fun DecisionTab(
             )
         ) {
             if (isDeciding) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("选择中...", fontSize = 18.sp)
+                Text("🎰 选择中...", fontSize = 18.sp)
             } else {
                 Icon(Icons.Default.Casino, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -297,7 +347,7 @@ fun MenuListTab(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            Text("加载中...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     } else if (menus.isEmpty()) {
         Box(
@@ -420,7 +470,7 @@ fun HistoryTab(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            Text("加载中...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     } else if (records.isEmpty()) {
         Box(
@@ -496,7 +546,7 @@ fun HistoryItemCard(record: DecisionRecord) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddMenuDialog(
     restaurants: List<String>,
@@ -506,46 +556,52 @@ fun AddMenuDialog(
 ) {
     var restaurantName by remember { mutableStateOf("") }
     var dishName by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
+
+    // 过滤匹配的餐厅
+    val filteredRestaurants = remember(restaurantName, restaurants) {
+        if (restaurantName.isBlank()) {
+            restaurants.take(5) // 显示前5个历史餐厅
+        } else {
+            restaurants.filter { it.contains(restaurantName, ignoreCase = true) }.take(5)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("添加菜单") },
         text = {
-            Column {
-                // 餐厅输入（带自动补全）
-                ExposedDropdownMenuBox(
-                    expanded = expanded && restaurants.isNotEmpty(),
-                    onExpandedChange = { expanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = restaurantName,
-                        onValueChange = {
-                            restaurantName = it
-                            expanded = true
-                        },
-                        label = { Text("餐厅名称") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        singleLine = true
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                // 餐厅输入
+                OutlinedTextField(
+                    value = restaurantName,
+                    onValueChange = { restaurantName = it },
+                    label = { Text("餐厅名称") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                // 历史餐厅快捷选择
+                if (filteredRestaurants.isNotEmpty() && restaurantName.isEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "历史餐厅（点击选择）",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
-                    val filteredRestaurants = restaurants.filter {
-                        it.contains(restaurantName, ignoreCase = true)
-                    }
-                    if (filteredRestaurants.isNotEmpty()) {
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            filteredRestaurants.forEach { restaurant ->
-                                DropdownMenuItem(
-                                    text = { Text(restaurant) },
-                                    onClick = {
-                                        restaurantName = restaurant
-                                        expanded = false
-                                    }
-                                )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        filteredRestaurants.forEach { restaurant ->
+                            OutlinedButton(
+                                onClick = { restaurantName = restaurant },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(restaurant, fontSize = 12.sp)
                             }
                         }
                     }
@@ -568,14 +624,7 @@ fun AddMenuDialog(
                 onClick = { onConfirm(restaurantName, dishName) },
                 enabled = restaurantName.isNotBlank() && dishName.isNotBlank() && !isLoading
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("添加")
-                }
+                Text(if (isLoading) "添加中..." else "添加")
             }
         },
         dismissButton = {

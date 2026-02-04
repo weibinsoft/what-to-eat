@@ -135,14 +135,7 @@ fun SettingsScreen(
                     containerColor = GradientStart
                 )
             ) {
-                if (uiState.isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("保存设置", fontSize = 16.sp)
-                }
+                Text(if (uiState.isSaving) "检测中..." else "保存设置", fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(32.dp))

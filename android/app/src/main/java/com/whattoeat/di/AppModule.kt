@@ -65,9 +65,13 @@ object AppModule {
                 SettingsDataStore.DEFAULT_SERVER_HOST
             }
             
+            // 确保 URL 以 / 结尾以便正确解析
+            val normalizedHost = if (currentHost.endsWith("/")) currentHost else "$currentHost/"
+            
             // 解析新的 baseUrl
-            val newBaseUrl = currentHost.toHttpUrlOrNull()
+            val newBaseUrl = normalizedHost.toHttpUrlOrNull()
             if (newBaseUrl != null) {
+                // 保留原始请求的路径和查询参数，只替换 scheme、host、port
                 val newUrl = originalRequest.url.newBuilder()
                     .scheme(newBaseUrl.scheme)
                     .host(newBaseUrl.host)
@@ -80,7 +84,23 @@ object AppModule {
                 
                 chain.proceed(newRequest)
             } else {
-                chain.proceed(originalRequest)
+                // 如果解析失败，使用默认地址
+                val defaultUrl = SettingsDataStore.DEFAULT_SERVER_HOST.toHttpUrlOrNull()
+                if (defaultUrl != null) {
+                    val newUrl = originalRequest.url.newBuilder()
+                        .scheme(defaultUrl.scheme)
+                        .host(defaultUrl.host)
+                        .port(defaultUrl.port)
+                        .build()
+                    
+                    val newRequest = originalRequest.newBuilder()
+                        .url(newUrl)
+                        .build()
+                    
+                    chain.proceed(newRequest)
+                } else {
+                    chain.proceed(originalRequest)
+                }
             }
         }
 
