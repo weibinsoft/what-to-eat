@@ -3,6 +3,9 @@ package com.whattoeat.data.repository
 import com.whattoeat.data.api.ApiService
 import com.whattoeat.data.api.models.*
 import com.whattoeat.data.datastore.SettingsDataStore
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +20,15 @@ class WhatToEatRepository @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ) {
 
+    private fun getErrorMessage(e: Exception): String {
+        return when (e) {
+            is UnknownHostException -> "无法连接到服务器，请检查服务器地址"
+            is ConnectException -> "连接服务器失败，请检查网络或服务器地址"
+            is SocketTimeoutException -> "连接超时，请检查网络"
+            else -> e.message ?: "网络错误"
+        }
+    }
+
     // 认证
     suspend fun register(username: String, password: String): Result<User> {
         return try {
@@ -29,7 +41,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "注册失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -47,7 +59,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "用户名或密码错误")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -65,7 +77,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "获取菜单失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -80,7 +92,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "添加失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -93,7 +105,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "删除失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -107,7 +119,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "获取餐厅失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -123,7 +135,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "决策失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 
@@ -138,7 +150,7 @@ class WhatToEatRepository @Inject constructor(
                 Result.Error(response.body()?.message ?: "获取历史失败")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "网络错误")
+            Result.Error(getErrorMessage(e))
         }
     }
 }

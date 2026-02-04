@@ -29,7 +29,7 @@ fun SettingsScreen(
 
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
-            snackbarHostState.showSnackbar("保存成功，重启应用后生效")
+            snackbarHostState.showSnackbar("保存成功，新配置已生效")
             viewModel.clearSaveSuccess()
         }
     }
