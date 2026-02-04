@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 今天吃什么 - 启动脚本
-# 先启动后端，再启动前端
+# 启动后端服务
 
 set -e
 
@@ -15,7 +15,6 @@ NC='\033[0m' # No Color
 # 项目根目录
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$PROJECT_DIR/backend"
-FRONTEND_DIR="$PROJECT_DIR/frontend"
 
 # PID 文件
 BACKEND_PID_FILE="$PROJECT_DIR/.backend.pid"
@@ -128,23 +127,6 @@ start_backend() {
     cd "$PROJECT_DIR"
 }
 
-# 启动前端
-start_frontend() {
-    log_info "Starting frontend..."
-    
-    cd "$FRONTEND_DIR"
-    
-    # 检查依赖
-    if [ ! -d "node_modules" ]; then
-        log_info "Installing frontend dependencies..."
-        npm install
-    fi
-    
-    # 启动前端开发服务器
-    log_success "Frontend starting at http://localhost:5173"
-    npm run dev
-}
-
 # 停止所有服务
 stop_all() {
     log_info "Stopping all services..."
@@ -157,11 +139,10 @@ show_help() {
     echo "Usage: $0 [command]"
     echo ""
     echo "Commands:"
-    echo "  start     Start backend and frontend (default)"
-    echo "  stop      Stop all services"
-    echo "  restart   Restart all services"
-    echo "  backend   Start backend only"
-    echo "  frontend  Start frontend only"
+    echo "  start     Start backend (default)"
+    echo "  backend   Start backend (same as start)"
+    echo "  stop      Stop backend service"
+    echo "  restart   Restart backend service"
     echo "  help      Show this help message"
 }
 
@@ -170,14 +151,16 @@ main() {
     local command=${1:-start}
     
     case $command in
-        start)
+        start|backend)
             echo -e "${GREEN}"
             echo "╔═══════════════════════════════════════╗"
             echo "║      🍽️  今天吃什么 - What To Eat      ║"
             echo "╚═══════════════════════════════════════╝"
             echo -e "${NC}"
             start_backend
-            start_frontend
+            log_success "Backend is running at http://localhost:8080"
+            log_info "Press Ctrl+C to stop"
+            tail -f "$PROJECT_DIR/backend.log"
             ;;
         stop)
             stop_all
@@ -186,16 +169,9 @@ main() {
             stop_all
             sleep 2
             start_backend
-            start_frontend
-            ;;
-        backend)
-            start_backend
             log_success "Backend is running at http://localhost:8080"
             log_info "Press Ctrl+C to stop"
             tail -f "$PROJECT_DIR/backend.log"
-            ;;
-        frontend)
-            start_frontend
             ;;
         help|--help|-h)
             show_help

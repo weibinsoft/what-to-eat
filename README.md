@@ -15,7 +15,6 @@
 
 | 层级 | 技术 |
 |------|------|
-| **Web 前端** | Vue 3 + TypeScript + Vite + Pinia + Vue Router |
 | **Android** | Kotlin + Jetpack Compose + Hilt + Retrofit |
 | **后端** | Go 1.21+ + Gin + GORM + Zap日志 |
 | **数据库** | MySQL 8.0 |
@@ -54,11 +53,10 @@ chmod +x init-go.sh
 确保 MySQL 服务已启动，编辑 `backend/config/config.yaml` 配置数据库连接，然后：
 
 ```bash
-./start.sh start     # 启动后端和前端（默认）
-./start.sh stop      # 停止所有服务
-./start.sh restart   # 重启所有服务
-./start.sh backend   # 只启动后端
-./start.sh frontend  # 只启动前端
+./start.sh start     # 启动后端（默认）
+./start.sh backend   # 启动后端（同 start）
+./start.sh stop      # 停止后端服务
+./start.sh restart   # 重启后端服务
 ./start.sh help      # 显示帮助
 ```
 
@@ -94,16 +92,6 @@ go run cmd/server/main.go
 ```
 
 后端会自动创建数据库、表结构和默认数据。
-
-#### 2. 启动前端
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-访问 <http://localhost:5173>
 
 ## 使用说明
 
@@ -201,15 +189,6 @@ cd android
 ├── android/                 # Android 客户端 (Kotlin + Jetpack Compose)
 │   ├── app/src/main/java/   # Kotlin 源码
 │   └── README.md            # Android 文档
-├── frontend/                # Vue 3 前端
-│   ├── src/
-│   │   ├── api/            # API 请求封装
-│   │   ├── components/     # 组件（SlotMachine, MenuList, HistoryPanel）
-│   │   ├── stores/         # Pinia 状态管理
-│   │   ├── views/          # 页面（Login, Home）
-│   │   ├── utils/          # 工具函数（音效管理）
-│   │   └── router/         # 路由配置
-│   └── package.json
 ├── backend/                 # Go 后端
 │   ├── cmd/server/         # 入口文件
 │   ├── config/             # Viper 配置
