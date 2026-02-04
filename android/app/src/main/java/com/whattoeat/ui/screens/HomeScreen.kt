@@ -183,12 +183,6 @@ fun HomeScreen(
                     text = { Text("菜单") },
                     icon = { Icon(Icons.Default.Restaurant, contentDescription = null) }
                 )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("历史") },
-                    icon = { Icon(Icons.Default.History, contentDescription = null) }
-                )
             }
 
             // 内容区域（支持左右滑动切换）
@@ -208,7 +202,7 @@ fun HomeScreen(
                                     if (totalDrag > 0 && currentTab > 0) {
                                         // 向右滑动，切换到前一个 Tab
                                         selectedTab = currentTab - 1
-                                    } else if (totalDrag < 0 && currentTab < 2) {
+                                    } else if (totalDrag < 0 && currentTab < 1) {
                                         // 向左滑动，切换到后一个 Tab
                                         selectedTab = currentTab + 1
                                     }
@@ -226,7 +220,7 @@ fun HomeScreen(
                                     // 向右滑动，切换到前一个 Tab
                                     selectedTab = currentTab - 1
                                     hasSwitched = true
-                                } else if (totalDrag < 0 && currentTab < 2) {
+                                } else if (totalDrag < 0 && currentTab < 1) {
                                     // 向左滑动，切换到后一个 Tab
                                     selectedTab = currentTab + 1
                                     hasSwitched = true
@@ -240,17 +234,15 @@ fun HomeScreen(
                         slotDisplayText = uiState.slotDisplayText,
                         isDeciding = uiState.isDeciding,
                         menuCount = uiState.menus.size,
-                        onDecide = { viewModel.decide() }
+                        records = uiState.historyRecords,
+                        isLoading = uiState.isLoading,
+                        onDecide = { viewModel.decide() },
+                        onRefresh = { viewModel.loadData() }
                     )
                     1 -> MenuListTab(
                         menus = uiState.menus,
                         isLoading = uiState.isLoading,
                         onDelete = { viewModel.deleteMenu(it) },
-                        onRefresh = { viewModel.loadData() }
-                    )
-                    2 -> HistoryTab(
-                        records = uiState.historyRecords,
-                        isLoading = uiState.isLoading,
                         onRefresh = { viewModel.loadData() }
                     )
                 }
@@ -296,7 +288,10 @@ fun DecisionTab(
     slotDisplayText: String,
     isDeciding: Boolean,
     menuCount: Int,
-    onDecide: () -> Unit
+    records: List<DecisionRecord>,
+    isLoading: Boolean,
+    onDecide: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "slot")
     val scale by infiniteTransition.animateFloat(
@@ -309,7 +304,7 @@ fun DecisionTab(
         label = "scale"
     )
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -319,71 +314,120 @@ fun DecisionTab(
                         MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
                     )
                 )
-            )
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // 老虎机显示区域
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .scale(if (isDeciding) scale else 1f),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(GradientStart.copy(alpha = 0.1f), GradientEnd.copy(alpha = 0.1f))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+        contentPadding = PaddingValues(24.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        // 决策区域：老虎机 + 按钮
+        item {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .scale(if (isDeciding) scale else 1f),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(GradientStart.copy(alpha = 0.1f), GradientEnd.copy(alpha = 0.1f))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = slotDisplayText,
+                            fontSize = if (slotDisplayText.length > 10) 20.sp else 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
                 Text(
-                    text = slotDisplayText,
-                    fontSize = if (slotDisplayText.length > 10) 20.sp else 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
+                    text = "共 $menuCount 道菜可选",
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = onDecide,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    enabled = !isDeciding && menuCount > 0,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GradientStart
+                    )
+                ) {
+                    if (isDeciding) {
+                        Text("🎰 选择中...", fontSize = 18.sp)
+                    } else {
+                        Icon(Icons.Default.Casino, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("开始决策", fontSize = 18.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // 历史记录标题
+                Text(
+                    text = "历史记录",
+                    modifier = Modifier.fillMaxWidth(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 菜单数量提示
-        Text(
-            text = "共 $menuCount 道菜可选",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 决策按钮
-        Button(
-            onClick = onDecide,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-            enabled = !isDeciding && menuCount > 0,
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GradientStart
-            )
-        ) {
-            if (isDeciding) {
-                Text("🎰 选择中...", fontSize = 18.sp)
-            } else {
-                Icon(Icons.Default.Casino, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("开始决策", fontSize = 18.sp)
+        // 历史记录列表
+        if (isLoading && records.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("加载中...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            }
+        } else if (records.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "还没有决策记录",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        } else {
+            items(records) { record ->
+                HistoryItemCard(record = record)
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -510,49 +554,6 @@ fun MenuItemCard(
                 }
             }
         )
-    }
-}
-
-@Composable
-fun HistoryTab(
-    records: List<DecisionRecord>,
-    isLoading: Boolean,
-    onRefresh: () -> Unit
-) {
-    if (isLoading && records.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("加载中...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        }
-    } else if (records.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "📝",
-                    fontSize = 64.sp
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "还没有决策记录",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(records) { record ->
-                HistoryItemCard(record = record)
-            }
-        }
     }
 }
 
